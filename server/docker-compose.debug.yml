@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  websocket-chat:
+    image: websocket-chat:debug
+    build:
+      context: .
+      dockerfile: Dockerfile.debug
+    ports:
+      - "5000:5000"
+    environment:
+      - REMOTE_DEBUGGING

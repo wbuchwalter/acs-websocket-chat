@@ -1,0 +1,19 @@
+
+html {
+    height: 100%;
+}
+body {
+   
+    height: 90%;
+}
+
+#messageBoard {
+    background-color: lightskyblue;
+    height: 90%;
+    overflow: auto;
+}
+
+
+#controls {
+    height: 10%;
+}

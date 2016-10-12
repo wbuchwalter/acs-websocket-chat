@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>WebSocket + ACS!</title>
+    <link rel="stylesheet" type="text/css" href="main.css" />
+  </head>
+  <body>
+    <div id='messageBoard'></div>
+    <div id='controls'>
+      <input id='textInput' />
+      <button id='btnSend'>Send</button>
+      <button id='btnClear'>Clear</button>
+      <button id='btnReconnect'>Reconnect</button>
+    </div>
+  </body>
+
+  <script>
+    // You can also require other files to run in this process
+    require('./renderer.js')
+  </script>
+</html>
