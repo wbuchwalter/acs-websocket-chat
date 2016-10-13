@@ -13,7 +13,7 @@
             },
 
             "launchBrowser": {
-                "enabled": true,
+                "enabled": false,
                 "args": "${auto-detect-url}",
                 "windows": {
                     "command": "cmd.exe",
