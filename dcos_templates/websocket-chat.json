@@ -8,6 +8,7 @@
         "volumes": [],
         "docker": {
             "image": "wbuchwalter/websocket-chat:latest",
+	    "forcePullImage": true,
             "network": "BRIDGE",
             "portMappings": [
                 {
@@ -20,7 +21,7 @@
     },
     "instances": 1,
     "labels":{
-        "HAPROXY_GROUP":"external,internal",           
+        "HAPROXY_GROUP":"external",           
         "HAPROXY_0_MODE":"http",
         "HAPROXY_0_VHOST":"wscagents.westus.cloudapp.azure.com"
     }

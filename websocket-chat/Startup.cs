@@ -32,8 +32,17 @@ namespace websocket_chat
             var openedSockets = new List<WebSocket>();
             app.UseWebSockets();
 
-            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("172.17.0.1:6379");
-            ISubscriber subscriber = redis.GetSubscriber();           
+            //in debug local: 172.17.0.1:6379
+            ConfigurationOptions config = new ConfigurationOptions
+            {
+                EndPoints =
+                {
+                    { "10.32.0.7", 10000 }
+                }
+            };
+            
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(config);
+            ISubscriber subscriber = redis.GetSubscriber();
 
             SubscribeMessage(subscriber, openedSockets);
             app.Use(WebSocketMiddleware(subscriber, openedSockets));
@@ -73,7 +82,7 @@ namespace websocket_chat
         }
 
         private void PublishMessage(ISubscriber subscriber, string message)
-        {            
+        {
             Console.WriteLine(message);
             subscriber.Publish("chat", message);
         }

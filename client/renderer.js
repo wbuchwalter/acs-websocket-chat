@@ -40,7 +40,7 @@ $('#btnReconnect').click(() => {
 });
 
 function connect() {
-    ws = new WebSocket("ws://localhost:5000");
+    ws = new WebSocket("ws://wscagents.westus.cloudapp.azure.com");
     ws.onopen = onopen;
     ws.onmessage = onmessage;
     ws.onerror = onerror;

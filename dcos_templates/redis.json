@@ -13,13 +13,12 @@
         {
           "containerPort": 6379,
           "hostPort": 0,
-          "servicePort": 0
+          "servicePort": 10000 
         }      
       ]
     }
   },
   "labels": {
-    "HAPROXY_GROUP": "external",
-    "HAPROXY_0_VHOST": "wscagents.westus.cloudapp.azure.com"   
+    "HAPROXY_GROUP": "internal"
   }
 }
