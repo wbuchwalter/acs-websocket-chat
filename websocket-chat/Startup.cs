@@ -10,8 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+using StackExchange.Redis;
 
 namespace websocket_chat
 {
@@ -33,23 +32,15 @@ namespace websocket_chat
             var openedSockets = new List<WebSocket>();
             app.UseWebSockets();
 
-           // var factory = new ConnectionFactory() { HostName = "", UserName = "guest", Password = "guest", VirtualHost = "/", Uri = "amqp://guest:guest@marathon-lb.marathon.mesos" };
-            var factory = new ConnectionFactory() { HostName = "wscagents.westus.cloudapp.azure.com", UserName = "guest", Password = "guest", VirtualHost = "/", Port = 80 };           
-            var connection = factory.CreateConnection();
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("172.17.0.1:6379");
+            ISubscriber subscriber = redis.GetSubscriber();           
 
-            //TCP NOT WORKING ON 80 PORT WITH MARATHON-LB ??????
-
-            var subscriber = new MessageSubscriber(connection);
-            var publisher = new MessagePublisher(connection);
-
-            handleRabbitMQMessage(subscriber, openedSockets);
-
-            app.Use(WebSocketMiddleware(subscriber, publisher, openedSockets));
-
+            SubscribeMessage(subscriber, openedSockets);
+            app.Use(WebSocketMiddleware(subscriber, openedSockets));
         }
 
 
-        private Func<HttpContext, Func<Task>, Task> WebSocketMiddleware(MessageSubscriber subscriber, MessagePublisher publisher, List<WebSocket> sockets)
+        private Func<HttpContext, Func<Task>, Task> WebSocketMiddleware(ISubscriber subscriber, List<WebSocket> sockets)
         {
             return (async (HttpContext http, Func<Task> next) =>
             {
@@ -61,13 +52,14 @@ namespace websocket_chat
                     while (webSocket.State == WebSocketState.Open)
                     {
                         var token = CancellationToken.None;
-                        var buffer = new ArraySegment<Byte>(new Byte[4096]);
+                        var buffer = new ArraySegment<Byte>(new Byte[4092]);
                         var received = await webSocket.ReceiveAsync(buffer, token);
 
                         switch (received.MessageType)
                         {
                             case WebSocketMessageType.Text:
-                                handleNewMessage(buffer, publisher);
+                                var message = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, received.Count);
+                                PublishMessage(subscriber, message);
                                 break;
                         }
                     }
@@ -75,24 +67,22 @@ namespace websocket_chat
                 }
                 else
                 {
-                    await http.Response.WriteAsync("Hello World!");
+                    await http.Response.WriteAsync("websocket-chat running.");
                 }
             });
         }
 
-        private void handleNewMessage(ArraySegment<byte> buffer, MessagePublisher publisher)
-        {
-            var request = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-            publisher.Emit(request);
+        private void PublishMessage(ISubscriber subscriber, string message)
+        {            
+            Console.WriteLine(message);
+            subscriber.Publish("chat", message);
         }
 
-        private void handleRabbitMQMessage(MessageSubscriber subscriber, List<WebSocket> sockets)
+        private void SubscribeMessage(ISubscriber subscriber, List<WebSocket> sockets)
         {
-            subscriber.Subscribe((model, ea) =>
+            subscriber.Subscribe("chat", (chan, message) =>
             {
-                var body = ea.Body;
-                var message = Encoding.UTF8.GetString(body);
-                sockets.ForEach(async ws => await ws.SendAsync(new ArraySegment<Byte>(ea.Body), WebSocketMessageType.Text, true, CancellationToken.None));
+                sockets.ForEach(async ws => await ws.SendAsync(new ArraySegment<Byte>(Encoding.ASCII.GetBytes(message)), WebSocketMessageType.Text, true, CancellationToken.None));
             });
         }
     }
