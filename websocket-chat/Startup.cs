@@ -33,8 +33,11 @@ namespace websocket_chat
             var openedSockets = new List<WebSocket>();
             app.UseWebSockets();
 
-            var factory = new ConnectionFactory() { HostName = "wscagents.westus.cloudapp.azure.com", UserName = "guest", Password = "guest", VirtualHost = "/" };
+           // var factory = new ConnectionFactory() { HostName = "", UserName = "guest", Password = "guest", VirtualHost = "/", Uri = "amqp://guest:guest@marathon-lb.marathon.mesos" };
+            var factory = new ConnectionFactory() { HostName = "wscagents.westus.cloudapp.azure.com", UserName = "guest", Password = "guest", VirtualHost = "/", Port = 80 };           
             var connection = factory.CreateConnection();
+
+            //TCP NOT WORKING ON 80 PORT WITH MARATHON-LB ??????
 
             var subscriber = new MessageSubscriber(connection);
             var publisher = new MessagePublisher(connection);
@@ -42,6 +45,7 @@ namespace websocket_chat
             handleRabbitMQMessage(subscriber, openedSockets);
 
             app.Use(WebSocketMiddleware(subscriber, publisher, openedSockets));
+
         }
 
 
@@ -71,7 +75,7 @@ namespace websocket_chat
                 }
                 else
                 {
-                    await next();
+                    await http.Response.WriteAsync("Hello World!");
                 }
             });
         }
