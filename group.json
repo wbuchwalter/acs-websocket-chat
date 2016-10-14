@@ -5,15 +5,41 @@
             "id": "redis-cluster",
             "apps": [
                 {
-                    "id": "redis",
-                    "cpus": 0.5,
+                    "id": "redis-master",
+                    "cpus": 0.2,
                     "mem": 128,
-                    "disk": 512,
-                    "instances": 3,
+                    "disk": 128,
+                    "instances": 1,
                     "container": {
                         "type": "DOCKER",
                         "docker": {
-                            "image": "redis",
+                            "image": "wbuchwalter/websocket-chat:redis-master",
+                            "network": "BRIDGE",
+                            "portMappings": [
+                                {
+                                    "containerPort": 6379,
+                                    "hostPort": 6379,
+                                    "servicePort": 10000
+                                }
+                            ]
+                        }
+                    },
+                    "constraints": [["hostname", "CLUSTER", "10.32.0.4"]],
+                    "args": [],
+                    "labels": {
+                        "HAPROXY_GROUP": "internal"
+                    }
+                },
+                {
+                    "id": "redis-slave",
+                    "cpus": 0.2,
+                    "mem": 128,
+                    "disk": 128,
+                    "instances": 1,
+                    "container": {
+                        "type": "DOCKER",
+                        "docker": {
+                            "image": "wbuchwalter/websocket-chat:redis-slave",
                             "network": "BRIDGE",
                             "portMappings": [
                                 {
@@ -24,6 +50,8 @@
                             ]
                         }
                     },
+                    "constraints": [["hostname", "CLUSTER", "10.32.0.4"]],
+                    "args": [],
                     "labels": {
                         "HAPROXY_GROUP": "internal"
                     }
