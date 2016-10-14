@@ -1,0 +1,70 @@
+{
+    "id": "acs-websocket-demo",
+    "groups": [
+        {
+            "id": "redis-cluster",
+            "apps": [
+                {
+                    "id": "redis",
+                    "cpus": 0.5,
+                    "mem": 128,
+                    "disk": 512,
+                    "instances": 3,
+                    "container": {
+                        "type": "DOCKER",
+                        "docker": {
+                            "image": "redis",
+                            "network": "BRIDGE",
+                            "portMappings": [
+                                {
+                                    "containerPort": 6379,
+                                    "hostPort": 0,
+                                    "servicePort": 10000
+                                }
+                            ]
+                        }
+                    },
+                    "labels": {
+                        "HAPROXY_GROUP": "internal"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "websocket-chat",
+            "apps": [
+                {
+                    "id": "websocket-chat",
+                    "cpus": 0.1,
+                    "mem": 128,
+                    "disk": 512,
+                    "container": {
+                        "type": "DOCKER",
+                        "volumes": [],
+                        "docker": {
+                            "image": "wbuchwalter/websocket-chat:latest",
+                            "forcePullImage": true,
+                            "network": "BRIDGE",
+                            "portMappings": [
+                                {
+                                    "containerPort": 5000,
+                                    "hostPort": 0,
+                                    "servicePort": 0
+                                }
+                            ]
+                        }
+                    },
+                    "instances": 3,
+                    "labels": {
+                        "HAPROXY_GROUP": "external",
+                        "HAPROXY_0_MODE": "http",
+                        "HAPROXY_0_VHOST": "wscagents.westus.cloudapp.azure.com"
+                    },
+                    "dependencies": [
+                        "/acs-websocket-demo/redis-cluster"
+                    ]
+                }
+            ]
+        }
+    ]
+}
